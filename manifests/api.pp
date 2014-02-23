@@ -33,13 +33,7 @@
 #
 # [*log_file*]
 #   (optional) The path of file used for logging
-#   If set to boolean false, it will not log to any file.
 #   Default: /var/log/glance/api.log
-#
-#  [*log_dir*]
-#    (optional) directory to which glance logs are sent.
-#    If set to boolean false, it will not log to any directory.
-#    Defaults to '/var/log/glance'
 #
 # [*registry_host*]
 #   (optional) The address used to connect to the registry service.
@@ -117,17 +111,10 @@
 #   (optional) Expose image location to trusted clients.
 #   Defaults to false.
 #
-# [*cert_file*]
-#   (optinal) Certificate file to use when starting API server securely
-#   Defaults to false, not set
-#
-# [*key_file*]
-#   (optional) Private key file to use when starting API server securely
-#   Defaults to false, not set
-#
-# [*ca_file*]
-#   (optional) CA certificate file to use to verify connecting clients
-#   Defaults to false, not set
+# [*purge_config*]
+#   (optional) Whether to set only the specified config options
+#   in the api config.
+#   Defaults to false.
 #
 class glance::api(
   $keystone_password,
@@ -138,7 +125,6 @@ class glance::api(
   $backlog               = '4096',
   $workers               = $::processorcount,
   $log_file              = '/var/log/glance/api.log',
-  $log_dir               = '/var/log/glance',
   $registry_host         = '0.0.0.0',
   $registry_port         = '9191',
   $auth_type             = 'keystone',
@@ -157,10 +143,7 @@ class glance::api(
   $use_syslog            = false,
   $log_facility          = 'LOG_USER',
   $show_image_direct_url = false,
-  $cert_file             = false,
-  $key_file              = false,
-  $ca_file               = false,
-  $notifier_strategy     = 'noop',
+  $purge_config          = false,
 ) inherits glance {
 
   require keystone::python
@@ -186,10 +169,6 @@ class glance::api(
     require => Class['glance'],
   }
 
-  @glance_api_config {
-    'DEFAULT/notifier_strategy': value => $notifier_strategy;
-  }
-
   if($sql_connection =~ /mysql:\/\/\S+:\S+@\S+\/\S+/) {
     require 'mysql::python'
   } elsif($sql_connection =~ /postgresql:\/\/\S+:\S+@\S+\/\S+/) {
@@ -208,6 +187,7 @@ class glance::api(
     'DEFAULT/bind_port':             value => $bind_port;
     'DEFAULT/backlog':               value => $backlog;
     'DEFAULT/workers':               value => $workers;
+    'DEFAULT/log_file':              value => $log_file;
     'DEFAULT/show_image_direct_url': value => $show_image_direct_url;
   }
 
@@ -287,56 +267,6 @@ class glance::api(
     }
   }
 
-  # SSL Options
-  if $cert_file {
-    glance_api_config {
-      'DEFAULT/cert_file' : value => $cert_file;
-    }
-  } else {
-    glance_api_config {
-      'DEFAULT/cert_file': ensure => absent;
-    }
-  }
-  if $key_file {
-    glance_api_config {
-      'DEFAULT/key_file'  : value => $key_file;
-    }
-  } else {
-    glance_api_config {
-      'DEFAULT/key_file': ensure => absent;
-    }
-  }
-  if $ca_file {
-    glance_api_config {
-      'DEFAULT/ca_file'   : value => $ca_file;
-    }
-  } else {
-    glance_api_config {
-      'DEFAULT/ca_file': ensure => absent;
-    }
-  }
-
-  # Logging
-  if $log_file {
-    glance_api_config {
-      'DEFAULT/log_file': value  => $log_file;
-    }
-  } else {
-    glance_api_config {
-      'DEFAULT/log_file': ensure => absent;
-    }
-  }
-
-  if $log_dir {
-    glance_api_config {
-      'DEFAULT/log_dir': value  => $log_dir;
-    }
-  } else {
-    glance_api_config {
-      'DEFAULT/log_dir': ensure => absent;
-    }
-  }
-
   # Syslog
   if $use_syslog {
     glance_api_config {
@@ -347,6 +277,10 @@ class glance::api(
     glance_api_config {
       'DEFAULT/use_syslog': value => false;
     }
+  }
+
+  resources { 'glance_api_config':
+    purge => $purge_config,
   }
 
   file { ['/etc/glance/glance-api.conf',

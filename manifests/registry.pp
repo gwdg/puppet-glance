@@ -21,13 +21,7 @@
 #
 #  [*log_file*]
 #    (optional) Log file for glance-registry.
-#    If set to boolean false, it will not log to any file.
 #    Defaults to '/var/log/glance/registry.log'.
-#
-#  [*log_dir*]
-#    (optional) directory to which glance logs are sent.
-#    If set to boolean false, it will not log to any directory.
-#    Defaults to '/var/log/glance'
 #
 #  [*sql_connection*]
 #    (optional) SQL connection string.
@@ -75,20 +69,14 @@
 #    (optional) Syslog facility to receive log lines.
 #    Defaults to LOG_USER.
 #
+#
 #  [*enabled*]
 #    (optional) Should the service be enabled. Defaults to true.
 #
-# [*cert_file*]
-#   (optinal) Certificate file to use when starting registry server securely
-#   Defaults to false, not set
-#
-# [*key_file*]
-#   (optional) Private key file to use when starting registry server securely
-#   Defaults to false, not set
-#
-# [*ca_file*]
-#   (optional) CA certificate file to use to verify connecting clients
-#   Defaults to false, not set
+#  [*purge_config*]
+#    (optional) Whether to create only the specified config values in
+#    the glance registry config file.
+#    Defaults to false.
 #
 class glance::registry(
   $keystone_password,
@@ -97,7 +85,6 @@ class glance::registry(
   $bind_host         = '0.0.0.0',
   $bind_port         = '9191',
   $log_file          = '/var/log/glance/registry.log',
-  $log_dir           = '/var/log/glance',
   $sql_connection    = 'sqlite:///var/lib/glance/glance.sqlite',
   $sql_idle_timeout  = '3600',
   $auth_type         = 'keystone',
@@ -112,9 +99,7 @@ class glance::registry(
   $use_syslog        = false,
   $log_facility      = 'LOG_USER',
   $enabled           = true,
-  $cert_file         = false,
-  $key_file          = false,
-  $ca_file           = false
+  $purge_config      = false
 ) inherits glance {
 
   require keystone::python
@@ -201,56 +186,6 @@ class glance::registry(
     }
   }
 
-  # SSL Options
-  if $cert_file {
-    glance_registry_config {
-      'DEFAULT/cert_file' : value => $cert_file;
-    }
-  } else {
-    glance_registry_config {
-      'DEFAULT/cert_file': ensure => absent;
-    }
-  }
-  if $key_file {
-    glance_registry_config {
-      'DEFAULT/key_file'  : value => $key_file;
-    }
-  } else {
-    glance_registry_config {
-      'DEFAULT/key_file': ensure => absent;
-    }
-  }
-  if $ca_file {
-    glance_registry_config {
-      'DEFAULT/ca_file'   : value => $ca_file;
-    }
-  } else {
-    glance_registry_config {
-      'DEFAULT/ca_file': ensure => absent;
-    }
-  }
-
-  # Logging
-  if $log_file {
-    glance_registry_config {
-      'DEFAULT/log_file': value  => $log_file;
-    }
-  } else {
-    glance_registry_config {
-      'DEFAULT/log_file': ensure => absent;
-    }
-  }
-
-  if $log_dir {
-    glance_registry_config {
-      'DEFAULT/log_dir': value  => $log_dir;
-    }
-  } else {
-    glance_registry_config {
-      'DEFAULT/log_dir': ensure => absent;
-    }
-  }
-
   # Syslog
   if $use_syslog {
     glance_registry_config {
@@ -261,6 +196,10 @@ class glance::registry(
     glance_registry_config {
       'DEFAULT/use_syslog': value => false;
     }
+  }
+
+  resources { 'glance_registry_config':
+    purge => $purge_config
   }
 
   file { ['/etc/glance/glance-registry.conf',
