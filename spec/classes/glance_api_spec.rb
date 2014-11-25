@@ -90,8 +90,6 @@ describe 'glance::api' do
         'hasrestart' => true
       ) }
 
-      it { should_not contain_exec('validate_nova_api') }
-
       it 'should lay down default api config' do
         [
           'verbose',
@@ -159,7 +157,6 @@ describe 'glance::api' do
         end
       end
     end
-
   end
 
   describe 'with disabled service managing' do
@@ -327,7 +324,7 @@ describe 'glance::api' do
       default_params
     end
 
-    it { should_not contain_glance_api_config('glance_store/stores').with_value('false') }
+    it { should_not contain_glance_api_config('DEFAULT/known_stores').with_value('false') }
   end
 
   describe 'with known_stores override' do
@@ -337,60 +334,7 @@ describe 'glance::api' do
       })
     end
 
-    it { should contain_glance_api_config('glance_store/stores').with_value("glance.store.filesystem.Store,glance.store.http.Store") }
-  end
-
-  describe 'with deprecated sql parameters' do
-    let :params do
-      default_params.merge({
-        :sql_connection   => 'mysql://user:pass@db/db',
-        :sql_idle_timeout => '30'
-      })
-    end
-
-    it 'configures database' do
-      should contain_glance_api_config('database/connection').with_value('mysql://user:pass@db/db')
-      should contain_glance_api_config('database/idle_timeout').with_value('30')
-    end
-  end
-
-  describe 'while validating the service with default command' do
-    let :params do
-      default_params.merge({
-        :validate => true,
-      })
-    end
-    it { should contain_exec('execute glance-api validation').with(
-      :path        => '/usr/bin:/bin:/usr/sbin:/sbin',
-      :provider    => 'shell',
-      :tries       => '10',
-      :try_sleep   => '2',
-      :command     => 'glance --os-auth-url http://localhost:5000/v2.0 --os-tenant-name services --os-username glance --os-password ChangeMe image-list',
-    )}
-
-    it { should contain_anchor('create glance-api anchor').with(
-      :require => 'Exec[execute glance-api validation]',
-    )}
-  end
-
-  describe 'while validating the service with custom command' do
-    let :params do
-      default_params.merge({
-        :validate            => true,
-        :validation_options  => { 'glance-api' => { 'command' => 'my-script' } }
-      })
-    end
-    it { should contain_exec('execute glance-api validation').with(
-      :path        => '/usr/bin:/bin:/usr/sbin:/sbin',
-      :provider    => 'shell',
-      :tries       => '10',
-      :try_sleep   => '2',
-      :command     => 'my-script',
-    )}
-
-    it { should contain_anchor('create glance-api anchor').with(
-      :require => 'Exec[execute glance-api validation]',
-    )}
+    it { should contain_glance_api_config('DEFAULT/known_stores').with_value("glance.store.filesystem.Store,glance.store.http.Store") }
   end
 
   describe 'on Debian platforms' do
