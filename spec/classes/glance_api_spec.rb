@@ -438,7 +438,9 @@ describe 'glance::api' do
     end
     let(:params) { default_params }
 
-    it {should contain_package('glance-api')}
+    it { should contain_package('glance-api').with(
+        :tag => ['openstack'],
+    )}
   end
 
   describe 'on RedHat platforms' do
@@ -447,7 +449,9 @@ describe 'glance::api' do
     end
     let(:params) { default_params }
 
-    it { should contain_package('openstack-glance')}
+    it { should contain_package('openstack-glance').with(
+        :tag => ['openstack'],
+    )}
   end
 
   describe 'on unknown platforms' do
