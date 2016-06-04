@@ -39,14 +39,15 @@
 #   (Optional) Defaults to $::os_service_default.
 #
 class glance::api::db (
-  $database_db_max_retries = $::os_service_default,
-  $database_connection     = 'sqlite:///var/lib/glance/glance.sqlite',
-  $database_idle_timeout   = $::os_service_default,
-  $database_min_pool_size  = $::os_service_default,
-  $database_max_pool_size  = $::os_service_default,
-  $database_max_retries    = $::os_service_default,
-  $database_retry_interval = $::os_service_default,
-  $database_max_overflow   = $::os_service_default,
+  $database_db_max_retries      = $::os_service_default,
+  $database_connection          = 'sqlite:///var/lib/glance/glance.sqlite',
+  $database_idle_timeout        = $::os_service_default,
+  $database_min_pool_size       = $::os_service_default,
+  $database_max_pool_size       = $::os_service_default,
+  $database_max_retries         = $::os_service_default,
+  $database_retry_interval      = $::os_service_default,
+  $database_max_overflow        = $::os_service_default,
+  $database_slave_connection    = $::os_service_default,
 ) {
 
   include ::glance::deps
@@ -73,5 +74,6 @@ class glance::api::db (
     retry_interval => $database_retry_interval_real,
     max_pool_size  => $database_max_pool_size_real,
     max_overflow   => $database_max_overflow_real,
+    slave_connection    => $database_slave_connection,
   }
 }
