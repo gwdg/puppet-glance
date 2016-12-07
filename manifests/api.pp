@@ -238,6 +238,10 @@
 #   (Optional) Enable or not Glance API v2.
 #   Defaults to $::os_service_default.
 #
+# [*sync_db*]
+#   (Optional) Run db sync on the node.
+#   Defaults to true
+#
 # [*validate*]
 #   (optional) Whether to validate the service is working after any service refreshes
 #   Defaults to false
@@ -375,6 +379,7 @@ class glance::api(
   $enable_proxy_headers_parsing         = $::os_service_default,
   $enable_v1_api                        = $::os_service_default,
   $enable_v2_api                        = $::os_service_default,
+  $sync_db                              = true,
   $validate                             = false,
   $validation_options                   = {},
   # DEPRECATED PARAMETERS
@@ -438,6 +443,9 @@ class glance::api(
 
   if $token_cache_time {
     warning('glance::api::token_cache_time is deprecated, please use glance::api::authtoken::token_cache_time')
+
+  if $sync_db {
+    include ::glance::db::sync
   }
 
   if ( $glance::params::api_package_name != $glance::params::registry_package_name ) {

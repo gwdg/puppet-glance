@@ -109,10 +109,6 @@
 #   (optional) CA certificate file to use to verify connecting clients
 #   Defaults to $::os_service_default.
 #
-# [*sync_db*]
-#   (Optional) Run db sync on the node.
-#   Defaults to true
-#
 #  [*os_region_name*]
 #    (optional) Sets the keystone region to use.
 #    Defaults to $::os_service_default.
@@ -174,6 +170,12 @@
 #    should be set to False.
 #    Defaults to $::os_service_default.
 #
+# DEPRECATED PARAMETERS
+#
+# [*sync_db*]
+#   (Optional) Run db sync on the node.
+#   Defaults to undef
+#
 class glance::registry(
   $package_ensure          = 'present',
   $debug                   = undef,
@@ -200,7 +202,6 @@ class glance::registry(
   $cert_file               = $::os_service_default,
   $key_file                = $::os_service_default,
   $ca_file                 = $::os_service_default,
-  $sync_db                 = true,
   $os_region_name          = $::os_service_default,
   # Deprecated
   $keystone_password       = undef,
@@ -213,6 +214,8 @@ class glance::registry(
   $memcached_servers       = undef,
   $token_cache_time        = undef,
   $enable_v1_registry      = $::os_service_default,
+  # DEPRECATED
+  $sync_db                 = undef,
 ) inherits glance {
 
   include ::glance::deps
@@ -304,6 +307,7 @@ class glance::registry(
   }
 
   if $sync_db {
+    warning('sync_db is deprecated in glance::registry. This option will be removed in a future release. Please use glance::api::sync_db.')
     include ::glance::db::sync
   }
 
