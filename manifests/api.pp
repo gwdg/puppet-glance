@@ -454,7 +454,8 @@ class glance::api(
 
   if $token_cache_time {
     warning('glance::api::token_cache_time is deprecated, please use glance::api::authtoken::token_cache_time')
-
+  }
+  
   if $sync_db {
     include ::glance::db::sync
     include ::glance::db::metadefs
